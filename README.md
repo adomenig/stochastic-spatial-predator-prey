@@ -1,5 +1,5 @@
 # solitaryAnimals
-## Setting up
+## Setting up Environment
 Before running any of the scripts, we need to set up the environment first. To do so, follow these steps below: 
 1. Download the lynx trajectory dataset
    - File: `Complete_20231231`  
