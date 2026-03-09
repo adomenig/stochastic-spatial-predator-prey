@@ -80,8 +80,8 @@ def verify_4_hour_intervals(df):
 if __name__ == "__main__":
     # get the unique lynx IDs
     unique_lynx_ids = gps_data['ID'].unique()
+    
     # process the lynx in parallel
-
     with ProcessPoolExecutor() as executor:
         results = list(executor.map(process_lynx, unique_lynx_ids))
     
