@@ -1,6 +1,39 @@
 #!/bin/bash
 
-# pasre command line arguments
+###############################################################################
+# clean_data.sh
+#
+# Master script for cleaning and processing lynx trajectory data. 
+# This script runs the entire data cleaning pipeline, 
+# but each step can also be executed individually if desired.
+#
+# Steps:
+#   1. Clean raw lynx trajectory data (script copied from )
+#   2. Align timestamps
+#   3. Remove outliers
+#   4. Generate basic diagnostic plots
+#
+# Usage:
+#   ./clean_data.sh --config path/to/config.py
+#
+# Arguments:
+#   --config : Path to the Python configuration file. This file must define 
+#              a variable "home_directory" that points to the root directory.
+#
+# Data Source and References:
+#   - The lynx trajectory data were obtained from the USFWS IRIS database:
+#       https://iris.fws.gov/APPS/ServCat/Reference/Profile/165521
+
+#   - The initial data cleaning steps in 01_lynxCleaning.R closely follow 
+#     the original authors' workflow, originally provided as `data_import.r`:
+#       https://iris.fws.gov/APPS/ServCat/Reference/Profile/168327
+
+#   - For scientific context and methodology of how the lynx data was collected, 
+#     see the publication describing this dataset:
+#       https://www.pnas.org/doi/10.1073/pnas.2414052121
+###############################################################################
+
+# parse command line arguments
 while [[ $# -gt 0 ]]; do
   key="$1"
   case $key in
