@@ -42,7 +42,7 @@ Before running any of the scripts, we need to set up the environment first. To d
 ## Data Cleaning
 The data cleaning pipeline is located in `/code/01_dataCleaning/`. Before running it, make sure you followed the setup steps above. The outputs for this pipeline will appear in:
 
-- `/data/processed/` — cleaned CSV files  
+- `/data/processed/dataCleaning/` — cleaned CSV files  
 - `/outputs/data_diagnostics/` — plots and diagnostic figures
 
 To run the pipeline, use the `clean_data.sh` script. Navigate to `/code/01_dataCleaning/` and run the following command: `./clean_data.sh --config /path/to/config.py`

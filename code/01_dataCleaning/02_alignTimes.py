@@ -9,8 +9,8 @@ if len(sys.argv) < 2:
 
 home_dir = sys.argv[1]
 
-data_path = f"{home_dir}/data/processed/lynx_initial_clean.csv"
-output_path = f"{home_dir}/data/processed/filtered_lynx_processed.csv"
+data_path = f"{home_dir}/data/processed/dataCleaning/lynx_initial_clean.csv"
+output_path = f"{home_dir}/data/processed/dataCleaning/filtered_lynx_processed.csv"
 gps_data = pd.read_csv(data_path)
 
 # parse the time

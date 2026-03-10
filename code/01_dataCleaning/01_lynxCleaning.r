@@ -118,7 +118,7 @@ rm(lynx.df.j)
 ### Remove any repeat observations in the data and filter out telonics headquarters locations
 lynx.df = distinct(lynx.df, ID, Time, .keep_all = TRUE)
 output_path <- "./data/processed"
-output_file <- file.path(output_path, "lynx_initial_clean.csv")
+output_file <- file.path(output_path, "/dataCleaning/lynx_initial_clean.csv")
 
 # create the directory if it doesn't exist
 if (!dir.exists(output_path)) {

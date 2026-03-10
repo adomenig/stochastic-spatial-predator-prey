@@ -18,6 +18,10 @@ home_dir = Path(sys.argv[1])
 sys.path.insert(0, str(home_dir))
 import helper_functions # type:ignore
 
+
+data_path = Path(f"{home_dir}/data/processed/dataCleaning/final_lynx_df.csv")
+out_path = Path(f"{home_dir}/outputs/data_diagnostics")
+
 colorscheme = ["#8fd7d7", "#00b0be", "#ff8ca1", "#f45f74", "#bdd373", "#98c127", "#ffcd8e", "#ffb255", "#c084d4"] 
 
 ############## BASIC DIAGNOSTICS PLOTTING STARAT ###################################
@@ -365,8 +369,6 @@ def plot_lynx_velocity(df, selected_lynx, out_path):
 
 
 if __name__ == "__main__":
-    data_path = Path(f"{home_dir}/data/processed/final_lynx_df.csv")
-    out_path = Path(f"{home_dir}/outputs/data_diagnostics")
     df = pd.read_csv(data_path, parse_dates=["Time"])
 
     # plotting the distribution of age and sex in the lynx

@@ -11,6 +11,10 @@ if len(sys.argv) < 2:
 
 home_dir = sys.argv[1]
 
+
+data_path = f"{home_dir}/data/processed/dataCleaning/filtered_lynx_processed.csv"
+output_path = f"{home_dir}/data/processed/dataCleaning/final_lynx_df.csv"
+
 def remove_high_speed_points(traj):
     """
     We have a few datapoints that are just unrealistic and clearly mistakes where the lynx will teleport 
@@ -46,8 +50,6 @@ def remove_high_speed_points(traj):
     return traj.loc[keep_mask].reset_index(drop=True)
 
 if __name__ == "__main__":
-    data_path = f"{home_dir}/data/processed/filtered_lynx_processed.csv"
-    output_path = f"{home_dir}/data/processed/final_lynx_df.csv"
     
     df = pd.read_csv(data_path, parse_dates=["Time"])
     df = df.groupby("ID", group_keys=False).apply(remove_high_speed_points)
