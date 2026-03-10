@@ -57,7 +57,7 @@ This command runs the entire pipeline in one go. Each step can also be executed 
    Aligns timestamps across all lynx trajectories to ensure we have consistent 4-hour timesteps. This step corrects for differences in recording intervals and prepares the dataset for downstream analyses such as MSD calculations.
 
 3. **03_removingOutliers.py**  
-   Identifies and removes outlier locations that are likely errors or biologically implausible. It also corrects minor inconsistencies, such as duplicate trajectories (e.g., WSM025 and WSM045).
+   Identifies and removes outlier locations that are likely errors or biologically implausible. It also corrects minor inconsistencies in formatting.
    
 4. **04_diagnostics.py**  
    Generates diagnostic plots and summaries for the cleaned dataset. This includes:
