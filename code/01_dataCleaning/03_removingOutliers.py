@@ -58,7 +58,7 @@ if __name__ == "__main__":
     # remove WSM025 because it's identical to WSM045 and we don't want duplicates
     df = df[df['ID'] != "WSM025"]
     print(f"Removed WSM025. Remaining unique IDs: {df['ID'].nunique()}")
-    
+
     # fixing a whitespace issue for one of the lynx
     df['Sex'] = df['Sex'].astype(str).str.strip()  # remove leading/trailing spaces
     print("Unique sexes in data after stripping whitespace:", df['Sex'].unique())
