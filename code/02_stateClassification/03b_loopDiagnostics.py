@@ -1,0 +1,276 @@
+import sys
+from haversine import haversine, Unit
+import pandas as pd
+import numpy as np
+from pathlib import Path
+import plotly.io as pio
+pio.renderers.default = "browser"
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+from matplotlib.colors import LinearSegmentedColormap
+
+### Getting the home directory from the bash script ##
+if len(sys.argv) < 2:
+    print("Usage: python process_lynx.py /path/to/home_directory")
+    sys.exit(1)
+
+home_dir = Path(sys.argv[1])
+sys.path.insert(0, str(home_dir))
+import helper_functions  # type:ignore
+
+# define paths
+data_path = Path(f"{home_dir}/data/processed/stateClassification/final_lynx_with_states.csv")
+out_path = Path(f"{home_dir}/outputs/classification_diagnostics/03_diagnostics")
+out_path.mkdir(parents=True, exist_ok=True)
+
+colorscheme = ["#8fd7d7", "#00b0be", "#ff8ca1", "#f45f74", "#bdd373", "#98c127", "#ffcd8e", "#ffb255", "#c084d4"]
+
+########## MEAN SQUARED DISPLACEMENT PLOT START #############################
+def extract_state_segments(states, coords):
+    """
+    Extract continuous coordinate segments for each state.
+    """
+    segments = {1: [], 2: [], 3: [],}
+
+    in_state = None
+    start = None
+
+    for i in range(len(states)):
+        if states[i] != in_state:
+            if in_state is not None:
+                segments[in_state].append(coords[start:i])
+            in_state = states[i]
+            start = i
+
+    if in_state is not None:
+        segments[in_state].append(coords[start:])
+
+    return segments
+
+
+def convert_to_xy_meters(coords):
+    """
+    Convert lat/long trajectory to relative xy meters
+    using haversine distances from first point.
+    """
+    base = coords[0]
+
+    xy = np.array([
+        [
+            haversine(base, (lat, base[1]), unit=Unit.METERS),
+            haversine(base, (base[0], lon), unit=Unit.METERS)
+        ]
+        for lat, lon in coords
+    ])
+
+    return xy
+
+
+def plot_statewise_msds(df, out_path):
+
+    state_info = [(1,'Stationary'), (2,'Exploratory'), (3,'Return Loop')]
+    fig, axs = plt.subplots(1,3, figsize=(18,5), sharey=True, sharex=True)
+
+    for lynx_id, traj in df.groupby("ID"):
+
+        coords = traj[['Lat','Long']].values
+        states = traj['State_Loop_Split'].values
+
+        xy_meters = convert_to_xy_meters(coords)
+
+        segments = extract_state_segments(states, xy_meters)
+
+        for ax, (state_val, title) in zip(axs, state_info):
+
+            for seg in segments[state_val]:
+
+                if len(seg) < 24:
+                    continue
+
+                max_lag = len(seg) // 2
+                msd = helper_functions.compute_msd(seg, max_lag)
+
+                msd = msd / 1_000_000  # convert m² → km²
+
+                if len(msd) > 20:
+                    msd = msd[:-20]
+
+                lags = np.arange(1, len(msd)+1) * 4  # 4-hour sampling
+
+                ax.plot(lags, msd,
+                        color=colorscheme[state_val*2],
+                        alpha=0.3)
+
+            ax.set_title(title)
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+            ax.set_xlabel("Lag (hours)")
+            ax.grid(True)
+
+    axs[0].set_ylabel("MSD (km²)")
+    plt.tight_layout()
+    plt.savefig(out_path / "msd_by_state.png")
+    print(f"Plotted statewise MSD.\n")
+
+########## MEAN SQUARED DISPLACEMENT PLOT END #############################
+
+
+################ VELOCITY/TURNING ANGLE PLOT START #############################
+def bearing(lat1, lon1, lat2, lon2):
+    """
+    Compute initial bearing (radians) from point 1 to point 2 on a sphere.
+    """
+    lat1, lon1, lat2, lon2 = map(np.radians, [lat1, lon1, lat2, lon2])
+    dlon = lon2 - lon1
+    x = np.sin(dlon) * np.cos(lat2)
+    y = np.cos(lat1)*np.sin(lat2) - np.sin(lat1)*np.cos(lat2)*np.cos(dlon)
+    return np.arctan2(x,y)
+
+def turning_angles_spherical(coords):
+    """
+    Compute absolute turning angles (radians) between consecutive segments on a sphere.
+    """
+    bearings = np.array([bearing(coords[i,0], coords[i,1], coords[i+1,0], coords[i+1,1])
+                         for i in range(len(coords)-1)])
+    dtheta = bearings[1:] - bearings[:-1]
+    dtheta = (dtheta + np.pi) % (2*np.pi) - np.pi
+    return np.abs(dtheta)
+
+def compute_velocity_and_turns(coords, times):
+
+    lat1, lon1 = coords[:-1, 0], coords[:-1, 1]
+    lat2, lon2 = coords[1:, 0], coords[1:, 1]
+
+    # call the vectorized haversine helper
+    distances = helper_functions.haversine_vectorized(lat1, lon1, lat2, lon2)  # km
+
+    # compute time differences in hours and then get km / h
+    times = pd.to_datetime(times)
+    dt = np.array([(times[i+1] - times[i]).total_seconds() / 3600 for i in range(len(times)-1)])
+    velocities = distances / dt  # km/h
+
+    # Compute turning angles
+    turning_angles = turning_angles_spherical(coords)
+
+    return velocities, turning_angles
+
+def extract_velocity_turn_by_state(df):
+    out = { 'state1': {'velocities': [], 'turning_angles': []},
+            'state2': {'velocities': [], 'turning_angles': []},
+            'state3': {'velocities': [], 'turning_angles': []}}
+
+    for lynx_id, traj in df.groupby("ID"):
+        coords = traj[['Lat','Long']].values
+        times = pd.to_datetime(traj['Time']).to_list()
+        states = traj['State_Loop_Split'].values
+
+        velocities, turning_angles = compute_velocity_and_turns(coords, times)
+        
+
+        for state_val, key in [(1,'state1'),(2,'state2'), (3, 'state3')]:
+            idx = np.where(states[1:-1] == state_val)[0] 
+            out[key]['velocities'].extend(velocities[idx])  # velocity from i→i+1, assign it to point i
+            out[key]['turning_angles'].extend(turning_angles[idx])
+
+    for key in out:
+        out[key]['velocities'] = np.array(out[key]['velocities'])
+        out[key]['turning_angles'] = np.array(out[key]['turning_angles'])
+
+    return out
+
+def plot_velocity_turn_heatmaps(vel_turn_data, out_path, n_angle_bins=36, n_vel_bins=40, max_vel=800):
+    state_info = [('state1','Stationary'), ('state2','Exploratory'), ('state3','Return Loop')]
+    fig, axs = plt.subplots(1,3, figsize=(18,5), sharey=True)
+
+    # create custom colormaps
+    cmap_state1 = LinearSegmentedColormap.from_list("state1_cmap", ["white", colorscheme[2]])
+    cmap_state2 = LinearSegmentedColormap.from_list("state2_cmap", ["white", colorscheme[4]])
+    cmap_state3 = LinearSegmentedColormap.from_list("state2_cmap", ["white", colorscheme[6]])
+
+    cmaps = [cmap_state1, cmap_state2, cmap_state3]
+
+    for ax, (key, title), cmap in zip(axs, state_info, cmaps):
+
+        angles = vel_turn_data[key]['turning_angles']
+        velocities = vel_turn_data[key]['velocities']
+
+        mask = velocities < max_vel
+        angles = angles[mask]
+        velocities = velocities[mask]
+
+        H, _, _ = np.histogram2d(angles, velocities, bins=[n_angle_bins, n_vel_bins], range=[[0,np.pi],[0,max_vel]], density=True)
+
+        H[H <= 0] = 1e-10
+
+        im = ax.imshow(
+            H.T,
+            origin='lower',
+            aspect='auto',
+            extent=[0,np.pi,0,max_vel],
+            cmap=cmap,
+            norm=mcolors.LogNorm()
+        )
+        ax.set_title(title)
+        ax.set_xlabel("Turning angle (rad)")
+        ax.grid(False)
+        cbar = fig.colorbar(im, ax=ax)
+        cbar.set_label("Density (log scale)")
+    axs[0].set_ylabel("Velocity (m/h)")
+    plt.tight_layout()
+    plt.savefig(out_path / "velocity_turning_angle_dist.png", dpi=300)
+    print(f"Plotted velocity and turning angle heatmaps for each state.\n")
+################ VELOCITY/TURNING ANGLE PLOT END #############################
+
+
+
+
+################ EXAMPLE TRAJECTORY PLOTS COLORED BY STATE START ##############
+def plot_selected_trajectories(df, id_list, out_path):
+    """
+    Plots full trajectories for selected IDs, colored by state (1, 2, and 3).
+    Each figure corresponds to a single ID.
+    """
+    state_info = {2: "Exploratory", 1: "Stationary", 3: "Return Loop",}
+    for lynx_id in id_list:
+        traj_df = df[df["ID"] == lynx_id].copy()
+
+        if len(traj_df) == 0:
+            continue
+
+        fig, ax = plt.subplots(figsize=(8, 8))
+
+        # plot trajectory colored by state
+        for state_val, title in state_info.items():
+            state_traj = traj_df[traj_df["State_Loop_Split"] == state_val][["Lat", "Long"]].values
+            if len(state_traj) == 0:
+                continue
+
+            color = colorscheme[state_val*2]
+            ax.scatter(state_traj[:, 1], state_traj[:, 0], color=color, s=20, alpha=0.7)
+
+        ax.set_aspect("equal")
+        ax.grid(True)
+        ax.set_title(f"Trajectory for ID {lynx_id}")
+        plt.tight_layout()
+        plt.savefig(out_path / f"{lynx_id}_trajectory.png")
+        plt.close(fig)
+        print(f"Plotted {lynx_id} trajectory with the colored return loop.\n")
+
+################ EXAMPLE TRAJECTORY PLOTS COLORED BY STATE END ##############
+
+
+if __name__ == "__main__":
+    df = pd.read_csv(data_path, parse_dates=["Time"])
+    # plotting median squared displacement split by state
+    plot_statewise_msds(df, out_path)
+
+    # velocity and turning angle distributions
+    vel_turn_data = extract_velocity_turn_by_state(df)
+    plot_velocity_turn_heatmaps(vel_turn_data, out_path)
+
+    # plotting trajectories colored by state for selected lynx. Feel free to change
+    selected_lynx = ["KAN006", "KOY024", "TET071"]
+    plot_selected_trajectories(df, selected_lynx, out_path)
+
+
+
