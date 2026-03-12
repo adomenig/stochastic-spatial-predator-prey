@@ -8,7 +8,7 @@
 # but each step can also be executed individually if desired.
 #
 # Steps:
-#   1. Clean raw lynx trajectory data (script copied from )
+#   1. Clean raw lynx trajectory data (script copied from original authors)
 #   2. Align timestamps
 #   3. Remove outliers
 #   4. Generate basic diagnostic plots
