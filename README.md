@@ -66,5 +66,35 @@ This command runs the entire pipeline in one go. Each step can also be executed 
    - Trajectory plots over a basemap
    - Mean squared displacement (MSD) analyses
    - Instantaneous velocity distributions for selected individuals
+
+
+## State Classification
+The state classification pipeline is located in `/code/02_stateClassification/`. The outputs for this pipeline will appear in:
+
+- `/data/processed/stateClassification/` — cleaned CSV files  
+- `/outputs/classification_diagnostics/` — plots and diagnostic figures
+
+To run the pipeline, use the `stateClassification.sh` script. Navigate to `/code/02_stateClassification/` and run the following command: `./stateClassification.sh --config /path/to/config.py`
+
+This command runs the entire pipeline in one go. Each step can also be executed individually if needed. The state classification pipeline consists of three main steps:
+
+1. **01_wmsdCalculation.py**  
+   Calculates windowed median squared displacement (WMSD). This script takes long to run, so I provided the pre-calculated cached files which are in       `/data/processed/stateClassification/`. By downloading these files and keeping them in the same relative location, the script will skip this step.
+
+2. **02(a + b)_stateClassification.py**  
+   a) Assigns states based on the WMSD values calculated in the previous step.
+   b) Generates diagnostic plots for the assigned states. This includes:
+      - Plots of the MSDs split by state
+      - Plots of the velocity and turning angle distributions split by state
+      - Example trajectories colored by assigned states
+
+4. **03(a + b)_splittingLoops.py**  
+   a) Identifies when state 2 causes a territory switch or when the lynx loops back to the same territory. If looping, assigns state 3 to the inbound/returning loop. 
+   b) Generates diagnostic plots for the assigned states. This includes:
+      - Plots of the MSDs split by state
+      - Plots of the velocity and turning angle distributions split by state
+      - Example trajectories colored by assigned states
+   
+
   
 
