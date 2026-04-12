@@ -56,7 +56,7 @@ The state classification pipeline is located in `/code/02_stateClassification/`.
 - `/data/processed/stateClassification/` — cleaned CSV files, WMSD files
 - `/outputs/classification_diagnostics/` — plots and diagnostic figures
 
-**Note:** Step 1 takes a while to run, so I provide the windowed median squared displacement (WMSD) files in `/data/processed/stateClassification/`. By downloading them and putting them in the same location, the pipeline will automatically skip step 1. Otherwise, step 1 will proceed normally and calculate the WMSD values and cache them in the same location. 
+**Note:** Step 1 takes a while to run (10-15 minutes), so I provide the windowed median squared displacement (WMSD) files in `/data/processed/stateClassification/`. By downloading them and putting them in the same location, the pipeline will automatically skip step 1. Otherwise, step 1 will proceed normally and calculate the WMSD values and cache them in the same location. 
 
 To run the pipeline, use the `stateClassification.sh` script. Navigate to `/code/02_stateClassification/` and run the following command: `./stateClassification.sh --config /path/to/config.py`
 
