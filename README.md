@@ -103,5 +103,7 @@ This command runs the entire pipeline in one go. Each step can also be executed 
    - Example simulated trajectories
   
 ## Population Model
+The population model was run on the midway3 clusters provided by the University of Chicago’s Research Computing Center. 
+
 
 
