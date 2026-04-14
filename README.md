@@ -1,6 +1,9 @@
-#
-solitaryAnimals
-## Setting up Environment
+## Stochastic Spatial Modeling of Predator–Prey Dynamics in the Lynx–Hare System
+In this project, we explore how individual-level movement influences large-scale population dynamics in the classic lynx–hare predator–prey system. We develop a stochastic movement model for lynx and integrate it into a Monte Carlo simulation framework to simulate population dynamics across space and time. We investigate how different movement behaviors and spatial configurations affect system stability, population cycles, and extinction risk.
+
+This work was conducted as part of my bachelor’s thesis at the University of Chicago. While the project is still ongoing, this repository contains all code written up to the point of thesis submission.
+
+### Setting up Environment
 Before running any of the scripts, we need to set up the environment first. To do so, follow these steps below: 
 1. Download the lynx trajectory dataset
    - File: `Complete_20231231`  
@@ -22,7 +25,7 @@ Before running any of the scripts, we need to set up the environment first. To d
 - Reference paper: [PNAS, 2024](https://www.pnas.org/doi/10.1073/pnas.2414052121)
 
 
-## Data Cleaning
+### Data Cleaning
 The data cleaning pipeline is located in `/code/01_dataCleaning/`. Before running it, make sure you followed the setup steps above. The outputs for this pipeline will appear in:
 
 - `/data/processed/dataCleaning/` — cleaned CSV files  
@@ -50,7 +53,7 @@ This command runs the entire pipeline in one go. Each step can also be executed 
    - Instantaneous velocity distributions for selected individuals
 
 
-## State Classification
+### State Classification
 The state classification pipeline is located in `/code/02_stateClassification/`. The outputs for this pipeline will appear in:
 
 - `/data/processed/stateClassification/` — cleaned CSV files, WMSD files
@@ -83,7 +86,7 @@ This command runs the entire pipeline in one go. Each step can also be executed 
    
 
   
-## Movement Model
+### Movement Model
 The state classification pipeline is located in `/code/03_movementModel/`. The outputs for this pipeline will appear in:
 
 - `/data/processed/movementModel/` — fit parameters for the movement model
@@ -102,7 +105,7 @@ This command runs the entire pipeline in one go. Each step can also be executed 
    - Velocity and turning angle distributions by state  
    - Example simulated trajectories
   
-## Population Model
+### Population Model
 The population model was run on the midway3 clusters provided by the University of Chicago’s Research Computing Center. 
 
 
