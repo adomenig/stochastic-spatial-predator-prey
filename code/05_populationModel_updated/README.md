@@ -144,24 +144,3 @@ In this example:
 
 ---
 
-## Summary
-
-### `.npz` file
-
-Stores:
-
-- Global population time series (`history`)
-- Final hare density field (`B_final`)
-- Final lynx coordinates (`lynx_pos`)
-- Final lynx behavioral states (`lynx_state`)
-
-### `.h5` file
-
-Stores time-resolved spatial snapshots:
-
-- Hare density field through time (`B`)
-- Simulation times (`time`)
-- Territorial lynx locations (`state1_pos`)
-- Exploratory lynx locations (`state2_pos`)
-
-This structure allows reconstruction of both population dynamics and spatial distributions throughout the simulation.
